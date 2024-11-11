@@ -23,42 +23,57 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+	@Autowired
+	private UserDetailsService userDetailsService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+	@Autowired
+	private JwtFilter jwtFilter;
 
-    @Autowired
-    private JwtFilter jwtFilter;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+		return httpSecurity.csrf(AbstractHttpConfigurer::disable)
+        .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+        .authorizeHttpRequests(request -> request
+            // Public endpoints for both customers and restaurant owners
+            .requestMatchers("/**", "/api/customer/signup", "/api/customer/login", "/api/customer/checkUsernameAvailability", "/h2-console/**")
+                .permitAll()  // These are accessible without authentication
+            
+            // Customer specific endpoints that require ROLE_CUSTOMER
+            .requestMatchers("/api/customer/update", "/api/customer/placeOrder", "/api/customer/orders/**")
+                .hasRole("CUSTOMER")  // Ensure that only users with 'ROLE_CUSTOMER' can access these endpoints
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                .headers(x -> x.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .authorizeHttpRequests(request -> request
-                        .requestMatchers("/**", "*/api/user/signup", "*/api/user/login", "/h2-console/**")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .build();
-    }
+            // Restaurant Owner specific endpoints that require ROLE_RESTAURANT_OWNER
+            .requestMatchers("/api/restaurant/signup", "/api/restaurant/login", "/api/restaurant/checkUsernameAvailability")
+                .permitAll()  // These endpoints should be available without authentication (for sign-up and login)
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+            .requestMatchers("/api/restaurant/menu/**", "/api/restaurant/update")
+                .hasRole("RESTAURANT_OWNER")  // Ensure that only users with 'ROLE_RESTAURANT_OWNER' can access restaurant management endpoints
+            
+            .anyRequest().authenticated()  // All other requests require authentication
+        )
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        .httpBasic(Customizer.withDefaults())
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Stateless authentication for JWT
+        .build();
 
-        return daoAuthenticationProvider;
-    }
+	}
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+	@Bean
+	public AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
+		daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+
+		return daoAuthenticationProvider;
+	}
+
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+			throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
 
 }
