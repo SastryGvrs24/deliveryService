@@ -20,8 +20,12 @@ public class RestaurantOwner {
 	private List<item_Order> orders;
 
 	@ManyToMany
-	@JoinTable(name = "customer_roles", joinColumns = @JoinColumn(name = "customer_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+	@JoinTable(name = "restaurant_owner_roles", joinColumns = @JoinColumn(name = "restaurant_owner_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private List<Role> roles;
+	
+	public RestaurantOwner() {
+		// Default constructor for JPA
+	}
 
 	// Getters and setters
 	public Long getId() {
@@ -79,7 +83,7 @@ public class RestaurantOwner {
 	public void setOrders(List<item_Order> orders) {
 		this.orders = orders;
 	}
-	
+
 	public List<Role> getRoles() {
 		return roles;
 	}

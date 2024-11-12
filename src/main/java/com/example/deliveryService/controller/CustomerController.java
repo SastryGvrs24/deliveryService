@@ -111,16 +111,7 @@ public class CustomerController {
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
 
-            // Update password if it's present in the request body
-            if (customer.getPassword() != null && !customer.getPassword().isEmpty()) {
-                existingCustomer.setPassword(passwordEncoder.encode(customer.getPassword()));
-            }
-
-            // Update address, name, and other profile details if provided in the request
-            if (customer.getDeliveryAddress() != null && !customer.getDeliveryAddress().isEmpty()) {
-                existingCustomer.setDeliveryAddress(customer.getDeliveryAddress());
-            }
-
+         
             // Save updated customer details
             customerService.updateCustomer(existingCustomer);
 

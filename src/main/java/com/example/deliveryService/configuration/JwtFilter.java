@@ -23,95 +23,97 @@ import java.io.IOException;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-	@Autowired
-	@Qualifier("customerDetailService")
-	private DAOCustomerDetailService daoCustomerDetailService;
+    
+    @Autowired
+    @Qualifier("customerDetailService")
+    private DAOCustomerDetailService daoCustomerDetailService;
 
-	@Autowired
-	@Qualifier("restaurantDetailService")
-	private DAORestaurantDetailService daoRestaurantDetailService;
-	
-	@Autowired
-	JWTService jwtService;
+    @Autowired
+    @Qualifier("restaurantDetailService")
+    private DAORestaurantDetailService daoRestaurantDetailService;
 
-	@Autowired
-	ApplicationContext applicationContext;
+    @Autowired
+    private JWTService jwtService;
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+    @Autowired
+    private ApplicationContext applicationContext;
 
-		String requestURI = request.getRequestURI();
-		// Skip authentication for certain endpoints
-		if (requestURI.contains("h2-console") || requestURI.equals("/api/customer/signup")
-				|| requestURI.equals("/api/customer/login")
-				|| requestURI.contains("/api/customer/checkUsernameAvailablility") ||requestURI.equals("/api/restaurant/signup")
-				|| requestURI.equals("/api/restaurant/login")
-				|| requestURI.contains("/api/restaurant/checkUsernameAvailablility") ) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-		String token = request.getHeader("Authorization");
-		String jwtToken = null;
-		String userName = null;
+        String requestURI = request.getRequestURI();
+        // Skip authentication for certain endpoints
+        if (requestURI.contains("h2-console") || requestURI.equals("/api/customer/signup")
+                || requestURI.equals("/api/customer/login")
+                || requestURI.contains("/api/customer/checkUsernameAvailablility") || requestURI.equals("/api/restaurant/signup")
+                || requestURI.equals("/api/restaurant/login")
+                || requestURI.contains("/api/restaurant/checkUsernameAvailablility")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-		if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
-			jwtToken = token.substring(7, token.length()).trim();
-			userName = jwtService.extractUserName(jwtToken); // Extract userName from JWT
-		}
+        // Extract and validate JWT token
+        String token = request.getHeader("Authorization");
+        String jwtToken = null;
+        String userName = null;
 
-		if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			// Determine if the user has any roles
-			String role = null;
+        if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
+            jwtToken = token.substring(7).trim();
+            userName = jwtService.extractUserName(jwtToken); // Extract username from JWT
+        }
 
-			// Check for customer, restaurant owner, admin, etc.
-			if (jwtService.hasRole(jwtToken, "ROLE_CUSTOMER")) {
-				role = "ROLE_CUSTOMER";
-			} else if (jwtService.hasRole(jwtToken, "ROLE_RESTAURANT_OWNER")) {
-				role = "ROLE_RESTAURANT_OWNER";
-			} else if (jwtService.hasRole(jwtToken, "ROLE_ADMIN")) {
-				role = "ROLE_ADMIN";
-			} else if (jwtService.hasRole(jwtToken, "ROLE_DELIVERY_PERSONNEL")) {
-				role = "ROLE_DELIVERY_PERSONNEL";
-			}
+        // Authenticate only if username exists and no existing auth in the context
+        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // Determine user role from JWT
+            String role = extractUserRole(jwtToken);
+            UserDetailsService userDetailsService = getUserDetailsServiceByRole(role);
 
-			UserDetailsService userDetailsService = null;
+            // Authenticate if a valid role-based UserDetailsService is found
+            if (userDetailsService != null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+                if (userDetails == null) {
+                    logger.warn("UserDetails for username: " + userName + " is null.");
+                } else {
+                    logger.debug("UserDetails loaded successfully for username: " + userName);
+                }
 
-			// Use a switch statement to select the appropriate UserDetailsService based on
-			// the role
-			switch (role) {
-			case "ROLE_CUSTOMER":
-				userDetailsService = daoCustomerDetailService;
-				break;
-			case "ROLE_RESTAURANT_OWNER":
-				userDetailsService = daoRestaurantDetailService;
-				break;
-//                case "ROLE_ADMIN":
-//                    userDetails = applicationContext.getBean(DAOAdminDetailService.class).loadUserByUsername(userName);
-//                    break;
-//                case "ROLE_DELIVERY_PERSONNEL":
-//                    userDetails = applicationContext.getBean(DaodeliveryPersonnelDetailService.class).loadUserByUsername(userName);
-//                    break;
-			default:
-				// If no matching role is found, handle appropriately (optional)
-				logger.warn("No matching role found for the token");
-				break;
-			}
-
-			if (userDetailsService != null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userName); // Correctly call loadUserByUsername() here
                 if (jwtService.validateToken(jwtToken, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    logger.warn("JWT validation failed for username: " + userName);
                 }
+            } else {
+                logger.warn("No matching UserDetailsService found for role: " + role);
             }
-        
-		}
+        }
 
-		filterChain.doFilter(request, response);
-	}
+        filterChain.doFilter(request, response);
+    }
 
+    // Extracts role from JWT token (modify as needed based on JWTService)
+    private String extractUserRole(String jwtToken) {
+        if (jwtService.hasRole(jwtToken, "ROLE_CUSTOMER")) {
+            return "ROLE_CUSTOMER";
+        } else if (jwtService.hasRole(jwtToken, "ROLE_RESTAURANT_OWNER")) {
+            return "ROLE_RESTAURANT_OWNER";
+        }
+        // Add other roles as needed
+        return null;
+    }
+
+    // Returns the appropriate UserDetailsService based on the role
+    private UserDetailsService getUserDetailsServiceByRole(String role) {
+        switch (role) {
+            case "ROLE_CUSTOMER":
+                return daoCustomerDetailService;
+            case "ROLE_RESTAURANT_OWNER":
+                return daoRestaurantDetailService;
+            // Add cases for additional roles with their respective UserDetailsService
+            default:
+                return null;
+        }
+    }
 }
