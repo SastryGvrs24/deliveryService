@@ -32,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
         // Skip authentication for certain endpoints
-        if (requestURI.contains("h2-console") || requestURI.equals("/api/user/signup") || requestURI.equals("/api/user/login") || requestURI.equals("/api/user/checkUsernameAvailablility")) {
+        if (requestURI.contains("v3/api-docs") || requestURI.contains("/swagger-ui") || requestURI.contains("h2-console") || requestURI.equals("/api/user/signup") || requestURI.equals("/api/user/login") || requestURI.equals("/api/user/checkUsernameAvailablility")) {
             filterChain.doFilter(request, response);
             return;
         }

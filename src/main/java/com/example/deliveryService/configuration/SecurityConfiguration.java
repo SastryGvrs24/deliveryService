@@ -18,9 +18,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @Configuration
 @EnableWebSecurity
+@CrossOrigin
 public class SecurityConfiguration {
 
 
@@ -38,7 +40,7 @@ public class SecurityConfiguration {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .headers(x -> x.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/**", "*/api/user/signup", "*/api/user/login", "/h2-console/**")
+                        .requestMatchers("/**", "/swagger-resources", "/swagger-resources/**", "v3/api-docs/**","/swagger-ui/**", "*/api/user/signup", "*/api/user/login", "/h2-console/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
