@@ -2,6 +2,7 @@ package com.example.deliveryService.controller;
 
 import com.example.deliveryService.domain.Customer;
 import com.example.deliveryService.domain.MenuItem;
+import com.example.deliveryService.domain.OrderStatus;
 import com.example.deliveryService.domain.RestaurantOwner;
 import com.example.deliveryService.domain.item_Order;
 import com.example.deliveryService.service.CustomerService;
@@ -146,7 +147,7 @@ public class CustomerController {
 		try {
 			// Extract order data
 			Long customerId = Long.parseLong(orderData.get("customerId").toString());
-			String status = orderData.get("status").toString();
+			String status = OrderStatus.PENDING.name();
 
 			List<Map<String, Object>> menuItemsData = (List<Map<String, Object>>) orderData.get("menuItems");
 

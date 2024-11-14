@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.example.deliveryService.service.CustomAuthenticationProvider;
 import com.example.deliveryService.service.DAOCustomerDetailService;
@@ -25,6 +26,7 @@ import com.example.deliveryService.service.DAORestaurantDetailService;
 
 @Configuration
 @EnableWebSecurity
+@CrossOrigin
 public class SecurityConfiguration {
 
     @Autowired
@@ -65,7 +67,7 @@ public class SecurityConfiguration {
 						.permitAll() // These endpoints should be available without authentication (for sign-up and
 										// login)
 
-						.requestMatchers("/api/restaurant/menu/**", "/api/restaurant/menu", "/api/restaurant/update")
+						.requestMatchers("/api/restaurant/menu/**", "/api/restaurant/menu", "/api/restaurant/update","/api/restaurant/orders","/api/restaurant/orders/**")
 						.hasRole("RESTAURANT_OWNER") // Ensure that only users with 'ROLE_RESTAURANT_OWNER' can access
 														// restaurant management endpoints
 

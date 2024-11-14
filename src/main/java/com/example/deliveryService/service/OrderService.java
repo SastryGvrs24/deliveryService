@@ -62,4 +62,24 @@ public class OrderService {
         return itemOrderRepository.save(order);
     }
 
+    // Fetch orders by restaurant owner ID and optional status
+    public List<item_Order> findOrdersByRestaurantAndStatus(Long restaurantOwnerId, String status) {
+        if (status != null) {
+            return itemOrderRepository.findByRestaurantOwnerIdAndStatus(restaurantOwnerId, status);
+        } else {
+            return itemOrderRepository.findByRestaurantOwnerId(restaurantOwnerId);
+        }
+    }
+
+    // Update the order status if the order belongs to the specified restaurant owner
+    public boolean updateRestaurantOrderStatus(Long orderId, String string, Long restaurantOwnerId) {
+        item_Order order = itemOrderRepository.findByIdAndRestaurantOwnerId(orderId, restaurantOwnerId);
+        
+        if (order != null) {
+            order.setStatus(string);
+            itemOrderRepository.save(order);
+            return true;
+        }
+        return false;
+    }
 }
