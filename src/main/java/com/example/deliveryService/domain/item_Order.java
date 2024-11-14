@@ -1,6 +1,7 @@
 package com.example.deliveryService.domain;
 
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
@@ -15,11 +16,13 @@ public class item_Order {
     private Customer customer;
 
     @ManyToOne
-    @JoinColumn(name = "restaurant_owner_id")  // Add a foreign key for the restaurant owner
+    @JoinColumn(name = "restaurant_owner_id")
     private RestaurantOwner restaurantOwner;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<MenuItem> menuItems;
+
+    private String status; // e.g., "Pending", "Preparing", etc.
 
     // Getters and setters
     public Long getId() {
@@ -52,5 +55,13 @@ public class item_Order {
 
     public void setMenuItems(List<MenuItem> menuItems) {
         this.menuItems = menuItems;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

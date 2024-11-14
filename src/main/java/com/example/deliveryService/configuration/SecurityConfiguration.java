@@ -6,21 +6,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.deliveryService.service.CustomAuthenticationProvider;
 import com.example.deliveryService.service.DAOCustomerDetailService;
 import com.example.deliveryService.service.DAORestaurantDetailService;
 
@@ -28,21 +27,23 @@ import com.example.deliveryService.service.DAORestaurantDetailService;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-	@Autowired
-	private UserDetailsService userDetailsService;
-	
-	@Autowired
+    @Autowired
+    private UserDetailsService userDetailsService;
+    
+    @Autowired
     private DAOCustomerDetailService customerDetailService;  // Customer service
 
     @Autowired
     @Qualifier("restaurantDetailService") // Qualifier for restaurant service
     private DAORestaurantDetailService restaurantDetailService;  
 
-	@Autowired
-	private JwtFilter jwtFilter;
+    @Autowired
+    private JwtFilter jwtFilter;
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // Removed the direct injection of CustomAuthenticationProvider here
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -55,7 +56,7 @@ public class SecurityConfiguration {
 						.permitAll() // These are accessible without authentication
 
 						// Customer specific endpoints that require ROLE_CUSTOMER
-						.requestMatchers("/api/customer/update", "/api/customer/placeOrder", "/api/customer/orders/**")
+						.requestMatchers("/api/customer/update", "/api/customer/Order", "/api/customer/orders/**","/api/customer/searchMenuItems")
 						.hasRole("CUSTOMER") // Ensure that only users with 'ROLE_CUSTOMER' can access these endpoints
 
 						// Restaurant Owner specific endpoints that require ROLE_RESTAURANT_OWNER
@@ -64,7 +65,7 @@ public class SecurityConfiguration {
 						.permitAll() // These endpoints should be available without authentication (for sign-up and
 										// login)
 
-						.requestMatchers("/api/restaurant/menu/**", "/api/restaurant/update")
+						.requestMatchers("/api/restaurant/menu/**", "/api/restaurant/menu", "/api/restaurant/update")
 						.hasRole("RESTAURANT_OWNER") // Ensure that only users with 'ROLE_RESTAURANT_OWNER' can access
 														// restaurant management endpoints
 
@@ -79,41 +80,16 @@ public class SecurityConfiguration {
 
 	}
 
-	@Bean
-	public AuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
-		daoAuthenticationProvider.setUserDetailsService(userDetailsService);
-
-		return daoAuthenticationProvider;
-	}
-
-    // AuthenticationManager to handle customer authentication
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
+    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity, CustomAuthenticationProvider customAuthenticationProvider) throws Exception {
         return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class)
-            .authenticationProvider(customCustomerAuthenticationProvider())
-            .authenticationProvider(customRestaurantAuthenticationProvider())
-            .build();
+                .authenticationProvider(customAuthenticationProvider) // Use the custom provider
+                .build();
     }
 
-	// Authentication provider for customer (using DaoAuthenticationProvider)
-	@Bean
-	public AuthenticationProvider customCustomerAuthenticationProvider() {
-		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
-		daoAuthenticationProvider.setUserDetailsService(customerDetailService); // Using the customer details service
-		return daoAuthenticationProvider;
-	}
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-	// Authentication provider for restaurant owner (using
-	// DaoAuthenticationProvider)
-	@Bean
-	public AuthenticationProvider customRestaurantAuthenticationProvider() {
-		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
-		daoAuthenticationProvider.setUserDetailsService(restaurantDetailService); // Using the restaurant owner details
-																					// service
-		return daoAuthenticationProvider;
-	}
 }

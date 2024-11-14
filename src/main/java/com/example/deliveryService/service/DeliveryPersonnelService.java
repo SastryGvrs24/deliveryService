@@ -35,12 +35,24 @@ public class DeliveryPersonnelService {
     }
 
     public DeliveryOrder acceptDelivery(Long deliveryOrderId, Long deliveryPersonnelId) {
+        // Fetch the delivery order by ID
         DeliveryOrder deliveryOrder = deliveryOrderRepository.findById(deliveryOrderId)
                 .orElseThrow(() -> new RuntimeException("Delivery Order not found"));
-        deliveryOrder.setDeliveryPersonnel(new DeliveryPersonnel(deliveryPersonnelId));
-        deliveryOrder.setStatus("En route"); // Update status to "En route"
+
+        // Fetch the existing DeliveryPersonnel by ID
+        DeliveryPersonnel deliveryPersonnel = deliveryPersonnelRepository.findById(deliveryPersonnelId)
+                .orElseThrow(() -> new RuntimeException("Delivery Personnel not found"));
+
+        // Set the DeliveryPersonnel on the DeliveryOrder
+        deliveryOrder.setDeliveryPersonnel(deliveryPersonnel);
+
+        // Update the delivery status to "En route"
+        deliveryOrder.setStatus("En route");
+
+        // Save the updated DeliveryOrder to the database
         return deliveryOrderRepository.save(deliveryOrder);
     }
+
 
     public void updateDeliveryStatus(Long deliveryOrderId, String status) {
         DeliveryOrder deliveryOrder = deliveryOrderRepository.findById(deliveryOrderId)

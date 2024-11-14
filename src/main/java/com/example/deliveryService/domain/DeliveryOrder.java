@@ -5,55 +5,55 @@ import jakarta.persistence.*;
 @Entity
 public class DeliveryOrder {
 
-	public Long getId() {
-		return id;
-	}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @ManyToOne
+    private item_Order order;  // The associated order
 
-	public item_Order getOrder() {
-		return order;
-	}
+    @ManyToOne
+    private DeliveryPersonnel deliveryPersonnel;  // The assigned delivery personnel
 
-	public void setOrder(item_Order order) {
-		this.order = order;
-	}
+    private String status;  // Delivery status (e.g., "Picked up", "En route", "Delivered")
 
-	public DeliveryPersonnel getDeliveryPersonnel() {
-		return deliveryPersonnel;
-	}
+    // Constructor
+    public DeliveryOrder(item_Order order, DeliveryPersonnel deliveryPersonnel, String status) {
+        this.order = order;
+        this.deliveryPersonnel = deliveryPersonnel;
+        this.status = status;
+    }
 
-	public void setDeliveryPersonnel(DeliveryPersonnel deliveryPersonnel) {
-		this.deliveryPersonnel = deliveryPersonnel;
-	}
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
 
-	public String getStatus() {
-		return status;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
+    public item_Order getOrder() {
+        return order;
+    }
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    public void setOrder(item_Order order) {
+        this.order = order;
+    }
 
-	@ManyToOne
-	private item_Order order; // The order assigned to delivery personnel
+    public DeliveryPersonnel getDeliveryPersonnel() {
+        return deliveryPersonnel;
+    }
 
-	@ManyToOne
-	private DeliveryPersonnel deliveryPersonnel;
+    public void setDeliveryPersonnel(DeliveryPersonnel deliveryPersonnel) {
+        this.deliveryPersonnel = deliveryPersonnel;
+    }
 
-	private String status; // e.g., "Picked up", "En route", "Delivered"
+    public String getStatus() {
+        return status;
+    }
 
-	public DeliveryOrder(item_Order order, DeliveryPersonnel deliveryPersonnel, String status) {
-		this.order = order;
-		this.deliveryPersonnel = deliveryPersonnel;
-		this.status = status;
-	}
-
-	// Getters and Setters
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

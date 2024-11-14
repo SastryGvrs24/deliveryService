@@ -96,6 +96,10 @@ public class RestaurantOwnerService {
 
 		// Fetch customer from the database by username
 		RestaurantOwner authenticatedRestaurantOwner = restaurantOwnerRepository.findByUsername(username);
+		
+		if (authenticatedRestaurantOwner==null) {
+		    throw new IllegalArgumentException("Customer not found");
+		}
 
 		// Extract roles from the authenticated customer
 		List<String> roles = authenticatedRestaurantOwner.getRoles().stream().map(role -> role.getRoleName())
@@ -107,5 +111,13 @@ public class RestaurantOwnerService {
 		// Return LoginResponse with username, token, and roles
 		return new LoginResponse(authenticatedRestaurantOwner.getUsername(), token, roles);
 	}
+	
+    public List<RestaurantOwner> findAllRestaurantOwners() {
+        return restaurantOwnerRepository.findAll();
+    }
+
+    public RestaurantOwner findRestaurantOwnerById(Long id) {
+        return restaurantOwnerRepository.findById(id).orElse(null);
+    }
 
 }

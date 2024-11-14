@@ -1,36 +1,13 @@
 package com.example.deliveryService.domain;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 
 @Entity
 public class DeliveryPersonnel {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-
-	private String username;
-	private String password;
-	private String fullName;
-	private String contactDetails;
-
-	public DeliveryPersonnel() {
-	}
-
-	// Constructor with id (for initializing only the id)
-	public DeliveryPersonnel(Long id) {
-		this.id = id;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getUsername() {
+    public String getUsername() {
 		return username;
 	}
 
@@ -54,42 +31,80 @@ public class DeliveryPersonnel {
 		this.fullName = fullName;
 	}
 
-	public String getContactDetails() {
-		return contactDetails;
-	}
+	@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	public void setContactDetails(String contactDetails) {
-		this.contactDetails = contactDetails;
-	}
+	private String username;
+	private String password;
+	private String fullName;
+    private String contactDetails;
+    private String vehicleType;
+    private boolean available;  // Status can be "AVAILABLE", "UNAVAILABLE"
 
-	public String getVehicleType() {
-		return vehicleType;
-	}
+    @OneToMany(mappedBy = "deliveryPersonnel")
+    private List<DeliveryOrder> deliveryOrders;
 
-	public void setVehicleType(String vehicleType) {
-		this.vehicleType = vehicleType;
-	}
+    // Constructor, Getters, Setters
+    public DeliveryPersonnel() {
+    }
 
-	public boolean isAvailable() {
-		return available;
-	}
+    public DeliveryPersonnel(String name, String contactDetails, String vehicleType, boolean status) {
+        this.username = name;
+        this.contactDetails = contactDetails;
+        this.vehicleType = vehicleType;
+        this.available = status;
+    }
 
-	public void setAvailable(boolean available) {
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return username;
+    }
+
+    public void setName(String name) {
+        this.username = name;
+    }
+
+    public String getContactDetails() {
+        return contactDetails;
+    }
+
+    public void setContactDetails(String contactDetails) {
+        this.contactDetails = contactDetails;
+    }
+
+    public String getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
+    }
+
+    public boolean getStatus() {
+        return available;
+    }
+
+    public void setStatus(boolean status) {
+        this.available = status;
+    }
+
+    public List<DeliveryOrder> getDeliveryOrders() {
+        return deliveryOrders;
+    }
+
+    public void setDeliveryOrders(List<DeliveryOrder> deliveryOrders) {
+        this.deliveryOrders = deliveryOrders;
+    }
+
+	public void setAvailable(boolean available) {		
 		this.available = available;
 	}
-
-	private String vehicleType;
-	private boolean available; // To indicate if the delivery person is available for deliveries
-
-	public DeliveryPersonnel(String username, String password, String fullName, String contactDetails,
-			String vehicleType) {
-		this.username = username;
-		this.password = password;
-		this.fullName = fullName;
-		this.contactDetails = contactDetails;
-		this.vehicleType = vehicleType;
-		this.available = true; // Default availability is true
-	}
-
-	// Getters and Setters
 }

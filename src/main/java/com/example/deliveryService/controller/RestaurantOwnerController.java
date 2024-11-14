@@ -1,10 +1,17 @@
 package com.example.deliveryService.controller;
 
 import com.example.deliveryService.domain.RestaurantOwner;
+import com.example.deliveryService.domain.Role;
 import com.example.deliveryService.service.RestaurantOwnerService;
 import com.example.deliveryService.dto.LoginRequest;
 import com.example.deliveryService.dto.LoginResponse;
 import com.example.deliveryService.dto.Response;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -128,5 +135,91 @@ public class RestaurantOwnerController {
 			return new ResponseEntity<>(response, HttpStatus.CONFLICT);
 		}
 	}
+
+    @GetMapping("/owners")
+    public ResponseEntity<Map<String, Object>> getAllRestaurantOwners() {
+        try {
+            // Fetch the list of restaurant owners from the service
+            List<RestaurantOwner> owners = restaurantOwnerService.findAllRestaurantOwners();
+
+            // Manually construct the JSON response
+            List<Map<String, Object>> ownerList = owners.stream().map(owner -> {
+                Map<String, Object> ownerMap = new HashMap<>();
+                ownerMap.put("id", owner.getId());
+                ownerMap.put("username", owner.getUsername());
+                ownerMap.put("restaurantName", owner.getRestaurantName());
+                ownerMap.put("address", owner.getAddress());
+                ownerMap.put("hoursOfOperation", owner.getHoursOfOperation());
+
+                // Get the roles of the owner and put them in a list (you can modify this structure as needed)
+                List<String> roles = owner.getRoles().stream()
+                                          .map(Role::getRoleName)
+                                          .collect(Collectors.toList());
+                ownerMap.put("roles", roles);
+
+                return ownerMap;
+            }).collect(Collectors.toList());
+
+            // Wrap the list of restaurant owners in a response map
+            Map<String, Object> response = new HashMap<>();
+            response.put("responseCode", HttpStatus.OK);
+            response.put("data", ownerList);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            // Handle error case
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("responseCode", HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.put("errorMessage", "Failed to fetch restaurant owners: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/owner/{id}")
+    public ResponseEntity<Map<String, Object>> getRestaurantOwnerById(@PathVariable Long id) {
+        try {
+            // Fetch the restaurant owner by ID from the service
+            RestaurantOwner restaurantOwner = restaurantOwnerService.findRestaurantOwnerById(id);
+            
+            if (restaurantOwner == null) {
+                // Construct error response if the owner is not found
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("responseCode", HttpStatus.NOT_FOUND);
+                errorResponse.put("errorMessage", "Restaurant owner not found with ID: " + id);
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            }
+
+            // Manually construct the JSON response
+            Map<String, Object> ownerMap = new HashMap<>();
+            ownerMap.put("id", restaurantOwner.getId());
+            ownerMap.put("username", restaurantOwner.getUsername());
+            ownerMap.put("restaurantName", restaurantOwner.getRestaurantName());
+            ownerMap.put("address", restaurantOwner.getAddress());
+            ownerMap.put("hoursOfOperation", restaurantOwner.getHoursOfOperation());
+
+            // Get the roles of the owner and put them in a list (you can modify this structure as needed)
+            List<String> roles = restaurantOwner.getRoles().stream()
+                                               .map(Role::getRoleName)
+                                               .collect(Collectors.toList());
+            ownerMap.put("roles", roles);
+
+            // Wrap the owner map in the response structure
+            Map<String, Object> response = new HashMap<>();
+            response.put("responseCode", HttpStatus.OK);
+            response.put("data", ownerMap);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            // Handle error case if something goes wrong
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("responseCode", HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.put("errorMessage", "Failed to fetch restaurant owner: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }

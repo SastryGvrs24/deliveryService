@@ -69,9 +69,17 @@ public class JWTService {
 	}
 
 	public boolean hasRole(String jwtToken, String role) {
-		String rolesString = (String) Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(jwtToken).getBody().get("roles");
+	    // Parse the JWT claims using the parser from older JJWT versions
+	    Claims claims = Jwts.parser()
+	                        .setSigningKey(getKey()) // Ensure getKey() provides the correct signing key
+	                        .build().parseSignedClaims(jwtToken) // Parses the JWT token
+	                        .getBody(); // Retrieves the claims body
 
-		return rolesString != null && rolesString.contains(role);
+	    // Retrieve the roles from claims as a List of Strings
+	    List<String> roles = claims.get("roles", List.class);
+
+	    // Check if the list contains the desired role
+	    return roles != null && roles.contains(role);
 	}
 
 }

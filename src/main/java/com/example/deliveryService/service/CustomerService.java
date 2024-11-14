@@ -3,12 +3,13 @@ package com.example.deliveryService.service;
 import com.example.deliveryService.dto.LoginResponse;
 import com.example.deliveryService.domain.Customer;
 import com.example.deliveryService.domain.MenuItem;
+import com.example.deliveryService.domain.RestaurantOwner;
 import com.example.deliveryService.domain.item_Order;
 import com.example.deliveryService.domain.Role;
 import com.example.deliveryService.domain.RoleEnum;
 import com.example.deliveryService.repository.CustomerRepository;
 import com.example.deliveryService.repository.MenuItemRepository;
-import com.example.deliveryService.repository.OrderRepository;
+import com.example.deliveryService.repository.ItemOrderRepository;
 import com.example.deliveryService.repository.RoleRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,7 +40,7 @@ public class CustomerService {
 	private CustomerRepository customerRepository;
 
 	@Autowired
-	private OrderRepository orderRepository;
+	private ItemOrderRepository orderRepository;
 
 	@Autowired
 	private RoleRepository roleRepository;
@@ -84,10 +87,52 @@ public class CustomerService {
 		return orderRepository.findByCustomerId(customerId);
 	}
 
-	// Place an Order for a Customer
-	public item_Order placeOrder(item_Order order) {
-		return orderRepository.save(order);
+	public List<item_Order> placeOrder(Long customerId, String status, List<Map<String, Object>> menuItemsData) {
+	    // Fetch the customer based on customerId
+	    Customer customer = customerRepository.findById(customerId)
+	        .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+
+	    // Group menu items by restaurant
+	    Map<Long, List<MenuItem>> restaurantMenuItemsMap = new HashMap<>();
+	    
+	    for (Map<String, Object> itemData : menuItemsData) {
+	        Long menuItemId = Long.parseLong(itemData.get("id").toString());
+	        Long restaurantId = Long.parseLong(itemData.get("restaurantId").toString());
+
+	        // Fetch MenuItem and validate it exists
+	        MenuItem menuItem = menuItemRepository.findById(menuItemId)
+	            .orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
+	        
+	        // Ensure the menu item belongs to the specified restaurant
+	        if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+	            throw new IllegalArgumentException("MenuItem does not belong to the specified restaurant");
+	        }
+
+	        // Add the item to the map based on its restaurant
+	        restaurantMenuItemsMap.computeIfAbsent(restaurantId, k -> new ArrayList<>()).add(menuItem);
+	    }
+
+	    // Create and save an order for each restaurant
+	    List<item_Order> createdOrders = new ArrayList<>();
+	    for (Map.Entry<Long, List<MenuItem>> entry : restaurantMenuItemsMap.entrySet()) {
+	        item_Order order = new item_Order();
+	        order.setCustomer(customer);
+	        order.setStatus(status);
+	        order.setMenuItems(entry.getValue());
+
+	        // Optionally set the restaurant owner for tracking
+	        RestaurantOwner restaurantOwner = entry.getValue().get(0).getRestaurant();
+	        order.setRestaurantOwner(restaurantOwner);
+
+	        // Save the order and add it to the result list
+	        item_Order savedOrder = orderRepository.save(order);
+	        createdOrders.add(savedOrder);
+	    }
+
+	    return createdOrders;  // Return the list of orders, each one associated with a different restaurant
 	}
+
+
 
 	// Login service: authenticates, generates JWT token, and constructs
 	// LoginResponse
@@ -134,17 +179,18 @@ public class CustomerService {
 	}
 
 	public List<MenuItem> searchMenuItems(String searchTerm, String searchType) {
-		switch (searchType.toLowerCase()) {
-		case "name":
-			return menuItemRepository.findByNameContainingIgnoreCase(searchTerm);
-		case "cuisine":
-			return menuItemRepository.findByCuisineTypeContainingIgnoreCase(searchTerm);
-		case "restaurant":
-			return menuItemRepository.findByRestaurantRestaurantNameContainingIgnoreCase(searchTerm);
-		default:
-			throw new IllegalArgumentException("Invalid search type: " + searchType);
-		}
+	    switch (searchType.toLowerCase()) {
+	        case "name":
+	            return menuItemRepository.findByNameContainingIgnoreCaseAndAvailable(searchTerm, true);
+	        case "cuisine":
+	            return menuItemRepository.findByCuisineTypeContainingIgnoreCaseAndAvailable(searchTerm, true);
+	        case "restaurant":
+	            return menuItemRepository.findByRestaurantRestaurantNameContainingIgnoreCaseAndAvailable(searchTerm, true);
+	        default:
+	            throw new IllegalArgumentException("Invalid search type: " + searchType);
+	    }
 	}
+
 
 	public boolean isUsernameAvailable(String username) {
 		// Check if a customer with the given username exists

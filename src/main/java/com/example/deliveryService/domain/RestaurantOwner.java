@@ -16,8 +16,8 @@ public class RestaurantOwner {
 	private String address;
 	private String hoursOfOperation;
 
-	@OneToMany(mappedBy = "restaurantOwner", cascade = CascadeType.ALL)
-	private List<item_Order> orders;
+	@OneToMany(mappedBy = "restaurantOwner")
+    private List<item_Order> orders;
 
 	@ManyToMany
 	@JoinTable(name = "restaurant_owner_roles", joinColumns = @JoinColumn(name = "restaurant_owner_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))

@@ -2,11 +2,14 @@ package com.example.deliveryService.repository;
 
 import com.example.deliveryService.domain.item_Order;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
-@Repository
-public interface OrderRepository extends JpaRepository<item_Order, Long> {
 
+public interface ItemOrderRepository extends JpaRepository<item_Order, Long> {
+
+    // Find orders by customer ID
     List<item_Order> findByCustomerId(Long customerId);
+
+    // Find orders by restaurant owner ID
+    List<item_Order> findByRestaurantOwnerId(Long restaurantOwnerId);
 }
