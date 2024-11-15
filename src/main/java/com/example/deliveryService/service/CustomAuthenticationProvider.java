@@ -2,9 +2,12 @@ package com.example.deliveryService.service;
 
 import com.example.deliveryService.domain.Customer;
 import com.example.deliveryService.domain.CustomerDetailsImpl;
+import com.example.deliveryService.domain.DeliveryPersonnel;
+import com.example.deliveryService.domain.DeliveryPersonnelDetailsImpl;
 import com.example.deliveryService.domain.RestaurantDetailsImpl;
 import com.example.deliveryService.domain.RestaurantOwner;
 import com.example.deliveryService.repository.CustomerRepository;
+import com.example.deliveryService.repository.DeliveryPersonnelRepository;
 import com.example.deliveryService.repository.RestaurantOwnerRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,14 +22,17 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     private final CustomerRepository customerRepository;
     private final RestaurantOwnerRepository restaurantOwnerRepository;
+    private final DeliveryPersonnelRepository deliveryPersonnelRepository;
     private final PasswordEncoder passwordEncoder;
 
     // Constructor injection for PasswordEncoder
     public CustomAuthenticationProvider(CustomerRepository customerRepository,
                                         RestaurantOwnerRepository restaurantOwnerRepository,
+                                        DeliveryPersonnelRepository deliveryPersonnelRepository,
                                         PasswordEncoder passwordEncoder) {
         this.customerRepository = customerRepository;
         this.restaurantOwnerRepository = restaurantOwnerRepository;
+        this.deliveryPersonnelRepository = deliveryPersonnelRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -52,9 +58,18 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 return new UsernamePasswordAuthenticationToken(restaurantOwnerDetails, password, restaurantOwnerDetails.getAuthorities());
             }
         } catch (UsernameNotFoundException e) {
-            throw new UsernameNotFoundException("User not found with username: " + username);
+        	// If restaurant not found, try DeliveryPersonnel
         }
 
+     // Third, try to authenticate as a DeliveryPersonnel
+        try {
+            UserDetails deliveryPersonnelDetails = loadDeliveryPersonnelByUsername(username);
+            if (passwordEncoder.matches(password, deliveryPersonnelDetails.getPassword())) {
+                return new UsernamePasswordAuthenticationToken(deliveryPersonnelDetails, password, deliveryPersonnelDetails.getAuthorities());
+            }
+        } catch (UsernameNotFoundException e) {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
         return null; // Authentication failed
     }
 
@@ -72,6 +87,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throw new UsernameNotFoundException("Restaurant owner not found with username: " + username);
         }
         return new RestaurantDetailsImpl(restaurantOwner); // Custom UserDetails for RestaurantOwner
+    }
+    
+    private UserDetails loadDeliveryPersonnelByUsername(String username) throws UsernameNotFoundException {
+        DeliveryPersonnel deliveryPersonnel = deliveryPersonnelRepository.findByUsername(username);
+        if (deliveryPersonnel == null) {
+            throw new UsernameNotFoundException("Restaurant owner not found with username: " + username);
+        }
+        return new DeliveryPersonnelDetailsImpl(deliveryPersonnel); // Custom UserDetails for DeliveryPersonnel
     }
 
     @Override

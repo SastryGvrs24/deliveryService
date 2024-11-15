@@ -17,6 +17,9 @@ public class Role {
     
     @ManyToMany(mappedBy = "roles")
     private List<RestaurantOwner> restaurantOwners;
+    
+    @ManyToMany(mappedBy = "roles")
+    private List<DeliveryPersonnel> deliveryPersonnel;
 
 
 	// Default constructor

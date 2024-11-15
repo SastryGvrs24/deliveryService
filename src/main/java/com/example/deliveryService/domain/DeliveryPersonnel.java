@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 @Entity
 public class DeliveryPersonnel {
 
-    public String getUsername() {
+	public String getUsername() {
 		return username;
 	}
 
@@ -32,79 +32,95 @@ public class DeliveryPersonnel {
 	}
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	private String username;
 	private String password;
 	private String fullName;
-    private String contactDetails;
-    private String vehicleType;
-    private boolean available;  // Status can be "AVAILABLE", "UNAVAILABLE"
+	private String contactDetails;
+	private String vehicleType;
+	private boolean available; // Status can be "AVAILABLE", "UNAVAILABLE"
 
-    @OneToMany(mappedBy = "deliveryPersonnel")
-    private List<DeliveryOrder> deliveryOrders;
+	@OneToMany(mappedBy = "deliveryPersonnel")
+	private List<DeliveryOrder> deliveryOrders;
 
-    // Constructor, Getters, Setters
-    public DeliveryPersonnel() {
-    }
+	@ManyToMany
+	@JoinTable(name = "delivery_personnel_roles", joinColumns = @JoinColumn(name = "delivery_personnel_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+	private List<Role> roles;
 
-    public DeliveryPersonnel(String name, String contactDetails, String vehicleType, boolean status) {
-        this.username = name;
-        this.contactDetails = contactDetails;
-        this.vehicleType = vehicleType;
-        this.available = status;
-    }
+	public boolean isAvailable() {
+		return available;
+	}
 
-    public Long getId() {
-        return id;
-    }
+	// Constructor, Getters, Setters
+	public DeliveryPersonnel() {
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public DeliveryPersonnel(String name, String contactDetails, String vehicleType, boolean status) {
+		this.username = name;
+		this.contactDetails = contactDetails;
+		this.vehicleType = vehicleType;
+		this.available = status;
+	}
 
-    public String getName() {
-        return username;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setName(String name) {
-        this.username = name;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getContactDetails() {
-        return contactDetails;
-    }
+	public String getName() {
+		return username;
+	}
 
-    public void setContactDetails(String contactDetails) {
-        this.contactDetails = contactDetails;
-    }
+	public void setName(String name) {
+		this.username = name;
+	}
 
-    public String getVehicleType() {
-        return vehicleType;
-    }
+	public String getContactDetails() {
+		return contactDetails;
+	}
 
-    public void setVehicleType(String vehicleType) {
-        this.vehicleType = vehicleType;
-    }
+	public void setContactDetails(String contactDetails) {
+		this.contactDetails = contactDetails;
+	}
 
-    public boolean getStatus() {
-        return available;
-    }
+	public String getVehicleType() {
+		return vehicleType;
+	}
 
-    public void setStatus(boolean status) {
-        this.available = status;
-    }
+	public void setVehicleType(String vehicleType) {
+		this.vehicleType = vehicleType;
+	}
 
-    public List<DeliveryOrder> getDeliveryOrders() {
-        return deliveryOrders;
-    }
+	public boolean getStatus() {
+		return available;
+	}
 
-    public void setDeliveryOrders(List<DeliveryOrder> deliveryOrders) {
-        this.deliveryOrders = deliveryOrders;
-    }
+	public void setStatus(boolean status) {
+		this.available = status;
+	}
 
-	public void setAvailable(boolean available) {		
+	public List<DeliveryOrder> getDeliveryOrders() {
+		return deliveryOrders;
+	}
+
+	public void setDeliveryOrders(List<DeliveryOrder> deliveryOrders) {
+		this.deliveryOrders = deliveryOrders;
+	}
+
+	public void setAvailable(boolean available) {
 		this.available = available;
+	}
+
+	public List<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<Role> roles) {
+		this.roles = roles;
 	}
 }

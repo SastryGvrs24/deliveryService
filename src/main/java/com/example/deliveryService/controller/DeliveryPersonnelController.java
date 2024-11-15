@@ -3,6 +3,8 @@ package com.example.deliveryService.controller;
 import com.example.deliveryService.domain.DeliveryPersonnel;
 import com.example.deliveryService.domain.DeliveryOrder;
 import com.example.deliveryService.service.DeliveryPersonnelService;
+import com.example.deliveryService.dto.LoginRequest;
+import com.example.deliveryService.dto.LoginResponse;
 import com.example.deliveryService.dto.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,46 +24,58 @@ public class DeliveryPersonnelController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // Register Delivery Personnel
-    @PostMapping("/signup")
-    public ResponseEntity<Response<DeliveryPersonnel>> registerDeliveryPersonnel(@RequestBody DeliveryPersonnel deliveryPersonnel) {
-        Response<DeliveryPersonnel> response = new Response<>();
-        try {
-            deliveryPersonnel.setPassword(passwordEncoder.encode(deliveryPersonnel.getPassword()));
-            DeliveryPersonnel savedDeliveryPersonnel = deliveryPersonnelService.registerDeliveryPersonnel(deliveryPersonnel);
-            response.setResponseCode(HttpStatus.CREATED);
-            response.setData(savedDeliveryPersonnel);
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (Exception e) {
-            response.setResponseCode(HttpStatus.BAD_REQUEST);
-            response.setErrorMessage("Signup failed: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-    }
+    // Register Delivery Personnel (Sign-Up)
+	@PostMapping("/signup")
+	public ResponseEntity<Response<DeliveryPersonnel>> registerDeliveryPesonnel(@RequestBody DeliveryPersonnel deliveryPersonnel) {
+		Response<DeliveryPersonnel> response = new Response<>();
+		try {
+			// Check if the username is already taken
+			boolean usernameExists = deliveryPersonnelService.isUsernameAvailable(deliveryPersonnel.getUsername());
+			if (usernameExists) {
+				response.setResponseCode(HttpStatus.BAD_REQUEST);
+				response.setErrorMessage("Username is already taken. Please choose another one.");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			}
 
-    // Login Delivery Personnel
-    @PostMapping("/login")
-    public ResponseEntity<Response<String>> loginDeliveryPersonnel(@RequestBody DeliveryPersonnel deliveryPersonnel) {
-        Response<String> response = new Response<>();
-        try {
-            DeliveryPersonnel existingDeliveryPersonnel = deliveryPersonnelService.findDeliveryPersonnelByUsername(deliveryPersonnel.getUsername());
-            if (existingDeliveryPersonnel == null || !passwordEncoder.matches(deliveryPersonnel.getPassword(), existingDeliveryPersonnel.getPassword())) {
-                response.setResponseCode(HttpStatus.UNAUTHORIZED);
-                response.setErrorMessage("Invalid credentials");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-            }
+			// Assign the default role (ROLE_CUSTOMER)
+			deliveryPersonnel.setPassword(passwordEncoder.encode(deliveryPersonnel.getPassword()));
+			deliveryPersonnelService.registerDeliveryPersonnel(deliveryPersonnel);
 
-            // Generate JWT token for the logged-in delivery personnel
-            String token = "JWT-TOKEN"; // Generate the JWT token here using JWTService
-            response.setResponseCode(HttpStatus.OK);
-            response.setData(token);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            response.setResponseCode(HttpStatus.BAD_REQUEST);
-            response.setErrorMessage("Login failed: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-    }
+			response.setResponseCode(HttpStatus.CREATED);
+			response.setData(deliveryPersonnel);
+			return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+		} catch (Exception e) {
+			response.setResponseCode(HttpStatus.BAD_REQUEST);
+			response.setErrorMessage("Sign-up failed: " + e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	// Register a new Customer
+	@PostMapping("/login")
+	public ResponseEntity<Response<LoginResponse>> authenticateDeliveryPersonnel(@RequestBody LoginRequest loginRequest) {
+		try {
+			// Authenticate user and generate token
+			LoginResponse loginResponse = deliveryPersonnelService.authenticateDeliveryPersonnel(loginRequest.getUsername(),
+					loginRequest.getPassword());
+
+			// Prepare the response with JWT token
+			Response<LoginResponse> response = new Response<>();
+			response.setResponseCode(HttpStatus.OK);
+			response.setData(loginResponse);
+
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
+		} catch (Exception e) {
+			// Handle any authentication failures
+			Response<LoginResponse> errorResponse = new Response<>();
+			errorResponse.setResponseCode(HttpStatus.UNAUTHORIZED);
+			errorResponse.setErrorMessage("Authentication failed: " + e.getMessage());
+			return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+		}
+	}
+
 
     // View Available Deliveries
     @GetMapping("/availableDeliveries/{deliveryPersonnelId}")

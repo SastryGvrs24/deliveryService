@@ -287,7 +287,7 @@ public class RestaurantOwnerController {
 		}
 	}
 
-	// Endpoint to update the status of an order
+	
 	// Endpoint to update the status of an order
 	@PreAuthorize("hasRole('ROLE_RESTAURANT_OWNER')")
 	@PutMapping("/orders/{orderId}/status")
