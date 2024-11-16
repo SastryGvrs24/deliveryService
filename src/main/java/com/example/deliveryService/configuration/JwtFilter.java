@@ -33,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
 	@Autowired
 	@Qualifier("restaurantDetailService")
 	private DAORestaurantDetailService daoRestaurantDetailService;
-	
+
 	@Autowired
 	@Qualifier("deliveryPersonnelDetailService")
 	private DAODeliveryPersonnelDetailService daoDeliveryPersonnelDetailService;
@@ -54,7 +54,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 		String requestURI = request.getRequestURI();
 		// Skip authentication for certain endpoints
-		if (requestURI.contains("h2-console") || requestURI.equals("/api/customer/signup")
+		if (requestURI.contains("v3/api-docs") || requestURI.contains("/swagger-ui") || requestURI.contains("h2-console") || requestURI.equals("/api/customer/signup")
 				|| requestURI.equals("/api/customer/login")
 				|| requestURI.contains("/api/customer/checkUsernameAvailablility")
 				|| requestURI.equals("/api/restaurant/signup") || requestURI.equals("/api/restaurant/login")

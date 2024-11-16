@@ -54,7 +54,7 @@ public class SecurityConfiguration {
 				.authorizeHttpRequests(request -> request
 						// Public endpoints for both customers and restaurant owners
 						.requestMatchers("/**", "/api/customer/signup", "/api/customer/login",
-								"/api/customer/checkUsernameAvailability", "/h2-console/**")
+								"/api/customer/checkUsernameAvailability", "/h2-console/**", "/swagger-resources", "/swagger-resources/**","/swagger-ui/**", "v3/api-docs/**")
 						.permitAll() // These are accessible without authentication
 
 						// Customer specific endpoints that require ROLE_CUSTOMER
