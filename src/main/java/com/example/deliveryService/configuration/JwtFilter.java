@@ -1,6 +1,8 @@
 package com.example.deliveryService.configuration;
 
+import com.example.deliveryService.service.DAOAdminDetailService;
 import com.example.deliveryService.service.DAOCustomerDetailService;
+import com.example.deliveryService.service.DAODeliveryPersonnelDetailService;
 import com.example.deliveryService.service.DAORestaurantDetailService;
 import com.example.deliveryService.service.JWTService;
 import jakarta.servlet.FilterChain;
@@ -31,6 +33,14 @@ public class JwtFilter extends OncePerRequestFilter {
 	@Autowired
 	@Qualifier("restaurantDetailService")
 	private DAORestaurantDetailService daoRestaurantDetailService;
+	
+	@Autowired
+	@Qualifier("deliveryPersonnelDetailService")
+	private DAODeliveryPersonnelDetailService daoDeliveryPersonnelDetailService;
+
+	@Autowired
+	@Qualifier("adminDetailService")
+	private DAOAdminDetailService daoAdminDetailService;
 
 	@Autowired
 	private JWTService jwtService;
@@ -51,7 +61,9 @@ public class JwtFilter extends OncePerRequestFilter {
 				|| requestURI.contains("/api/restaurant/checkUsernameAvailablility")
 				|| requestURI.equals("/api/deliveryPersonnel/signup")
 				|| requestURI.equals("/api/deliveryPersonnel/login")
-				|| requestURI.contains("/api/deliveryPersonnel/checkUsernameAvailablility")) {
+				|| requestURI.contains("/api/deliveryPersonnel/checkUsernameAvailablility") || requestURI.equals("/api/admin/signup")
+				|| requestURI.equals("/api/admin/login")
+				|| requestURI.contains("/api/admin/checkUsernameAvailablility")) {
 			filterChain.doFilter(request, response);
 			return;
 		}
@@ -103,6 +115,12 @@ public class JwtFilter extends OncePerRequestFilter {
 		} else if (jwtService.hasRole(jwtToken, "ROLE_RESTAURANT_OWNER")) {
 			return "ROLE_RESTAURANT_OWNER";
 		}
+		 else if (jwtService.hasRole(jwtToken, "ROLE_DELIVERY_PERSONNEL")) {
+				return "ROLE_DELIVERY_PERSONNEL";
+			}
+		 else if (jwtService.hasRole(jwtToken, "ROLE_ADMIN")) {
+				return "ROLE_ADMIN";
+			}
 		// Add other roles as needed
 		return null;
 	}
@@ -114,6 +132,10 @@ public class JwtFilter extends OncePerRequestFilter {
 			return daoCustomerDetailService;
 		case "ROLE_RESTAURANT_OWNER":
 			return daoRestaurantDetailService;
+		case "ROLE_DELIVERY_PERSONNEL":
+			return daoDeliveryPersonnelDetailService;
+		case "ROLE_ADMIN":
+			return daoAdminDetailService;
 		// Add cases for additional roles with their respective UserDetailsService
 		default:
 			return null;

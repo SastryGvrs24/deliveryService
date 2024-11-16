@@ -11,6 +11,7 @@ public class Response<T> {
     private Map<String, T> data = new HashMap<>();
 
     private String errorMessage;
+    private String successMessage;
 
     public int getResponseCode() {
         return responseCode;
@@ -35,4 +36,9 @@ public class Response<T> {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
+
+	public void setMessage(String successMessage) {
+		this.successMessage = successMessage;
+		
+	}
 }

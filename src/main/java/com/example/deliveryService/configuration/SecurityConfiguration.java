@@ -59,7 +59,7 @@ public class SecurityConfiguration {
 
 						// Customer specific endpoints that require ROLE_CUSTOMER
 						.requestMatchers("/api/customer/update", "/api/customer/Order", "/api/customer/orders/**",
-								"/api/customer/searchMenuItems")
+								"/api/customer/searchMenuItems","/api/customer/trackOrder/**")
 						.hasRole("CUSTOMER") // Ensure that only users with 'ROLE_CUSTOMER' can access these endpoints
 
 						// Restaurant Owner specific endpoints that require ROLE_RESTAURANT_OWNER
@@ -69,7 +69,7 @@ public class SecurityConfiguration {
 										// login)
 
 						.requestMatchers("/api/restaurant/menu/**", "/api/restaurant/menu", "/api/restaurant/update",
-								"/api/restaurant/orders", "/api/restaurant/orders/**")
+								"/api/restaurant/orders", "/api/restaurant/orders/**","/api/deliveries/**")
 						.hasRole("RESTAURANT_OWNER") // Ensure that only users with 'ROLE_RESTAURANT_OWNER' can access
 														// restaurant management endpoints
 
@@ -78,6 +78,18 @@ public class SecurityConfiguration {
 								"/api/deliveryPersonnel/checkUsernameAvailability")
 						.permitAll() // These endpoints should be available without authentication (for sign-up and
 										// login)
+						.requestMatchers("/api/deliveryPersonnel/availableDeliveries/**", "/api/deliveryPersonnel/acceptDelivery",
+								"/api/deliveryPersonnel/updateDeliveryStatus", "/api/deliveryPersonnel/setAvailability")
+						.hasRole("RESTAURANT_OWNER") 
+						
+						.requestMatchers("/api/admin/signup", "/api/admin/login",
+								"/api/admin/checkUsernameAvailability")
+						.permitAll()
+						
+						.requestMatchers("/api/admin/createUser", "/api/admin/updateUser/**",
+								"/api/admin/deactivateUser", "/api/admin/viewAllOrders", "/api/admin/generateReport",
+								"/api/admin/platformActivity", "/api/admin/deleteOrder/**")
+						.hasRole("RESTAURANT_OWNER") 
 						
 						.anyRequest().authenticated() // All other requests require authentication
 				).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

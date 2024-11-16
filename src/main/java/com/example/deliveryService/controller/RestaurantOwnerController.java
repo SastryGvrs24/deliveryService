@@ -38,36 +38,57 @@ public class RestaurantOwnerController {
 	private OrderService orderService;
 
 	@PostMapping("/signup")
-	public ResponseEntity<Response<RestaurantOwner>> registerRestaurantOwner(
-			@RequestBody RestaurantOwner restaurantOwner) {
-		Response<RestaurantOwner> response = new Response<>();
-		try {
-			// Check if the username is already taken
-			boolean usernameExists = restaurantOwnerService.isUsernameAvailable(restaurantOwner.getUsername());
-			if (usernameExists) {
-				response.setResponseCode(HttpStatus.BAD_REQUEST);
-				response.setErrorMessage("Username is already taken. Please choose another one.");
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-			}
+	public ResponseEntity<Response<Map<String, Object>>> registerRestaurantOwner(
+	        @RequestBody RestaurantOwner restaurantOwner) {
+	    Response<Map<String, Object>> response = new Response<>();
+	    try {
+	        // Check if the username is already taken
+	        boolean usernameExists = restaurantOwnerService.isUsernameAvailable(restaurantOwner.getUsername());
+	        if (usernameExists) {
+	            response.setResponseCode(HttpStatus.BAD_REQUEST);
+	            response.setErrorMessage("Username is already taken. Please choose another one.");
+	            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	        }
 
-			// Encrypt password before saving
-			restaurantOwner.setPassword(passwordEncoder.encode(restaurantOwner.getPassword()));
-			// Set the role explicitly or through a method
+	        // Encrypt password before saving
+	        restaurantOwner.setPassword(passwordEncoder.encode(restaurantOwner.getPassword()));
+	        
+	        // Save the restaurant owner
+	        RestaurantOwner savedOwner = restaurantOwnerService.registerRestaurantOwner(restaurantOwner);
 
-			// Save the restaurant owner
-			RestaurantOwner savedOwner = restaurantOwnerService.registerRestaurantOwner(restaurantOwner);
+	        // Prepare the manual response structure
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("id", savedOwner.getId());
+	        data.put("username", savedOwner.getUsername());
+	        data.put("fullName", savedOwner.getFullName());
+	        
+	        // Extract role details from the saved owner (assuming the roles are already loaded)
+	        List<Map<String, Object>> roles = new ArrayList<>();
+	        for (Role role : savedOwner.getRoles()) {
+	            Map<String, Object> roleMap = new HashMap<>();
+	            roleMap.put("id", role.getId());
+	            roleMap.put("roleName", role.getRoleName());
+	            roles.add(roleMap);
+	        }
+	        
+	        data.put("roles", roles);
 
-			// Prepare the response
-			response.setResponseCode(HttpStatus.CREATED);
-			response.setData(savedOwner);
-			return new ResponseEntity<>(response, HttpStatus.CREATED);
+	        // Prepare the success message
+	        String successMessage = "Restaurant Owner registered successfully";
 
-		} catch (Exception e) {
-			response.setResponseCode(HttpStatus.BAD_REQUEST);
-			response.setErrorMessage("Sign-up failed: " + e.getMessage());
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-		}
+	        // Populate the response with success message and data
+	        response.setResponseCode(HttpStatus.CREATED);
+	        response.setData(data); // Set the structured data as part of the response
+	        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+	    } catch (Exception e) {
+	        response.setResponseCode(HttpStatus.BAD_REQUEST);
+	        response.setErrorMessage("Sign-up failed: " + e.getMessage());
+	        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	    }
 	}
+
+
 
 	// Login Restaurant Owner
 	@PostMapping("/login")

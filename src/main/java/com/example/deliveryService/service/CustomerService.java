@@ -82,10 +82,6 @@ public class CustomerService {
 		return customerRepository.findByUsername(username);
 	}
 
-	// Get Orders by Customer ID
-	public List<item_Order> getOrdersByCustomerId(Long customerId) {
-		return orderRepository.findByCustomerId(customerId);
-	}
 
 	public List<item_Order> placeOrder(Long customerId, String status, List<Map<String, Object>> menuItemsData) {
 	    // Fetch the customer based on customerId
@@ -191,6 +187,11 @@ public class CustomerService {
 	    }
 	}
 
+	// New method to return all menu items when no search criteria is provided
+	public List<MenuItem> getAllMenuItems() {
+	    return menuItemRepository.findAll(); // Returns all menu items from all restaurants
+	}
+
 
 	public boolean isUsernameAvailable(String username) {
 		// Check if a customer with the given username exists
@@ -200,5 +201,9 @@ public class CustomerService {
 		// available)
 		return existingCustomer != null;
 	}
+	
+    public List<item_Order> getOrdersByCustomerId(Long customerId) {
+        return orderRepository.findByCustomerIdWithMenuItems(customerId);
+    }
 
 }

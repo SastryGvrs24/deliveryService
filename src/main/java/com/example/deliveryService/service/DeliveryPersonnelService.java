@@ -49,7 +49,7 @@ public class DeliveryPersonnelService {
 
 	public List<DeliveryOrder> viewAvailableDeliveries(Long deliveryPersonnelId) {
 		// Returns available deliveries (status = "Picked up")
-		return deliveryOrderRepository.findByDeliveryPersonnelIdAndStatus(deliveryPersonnelId, "Picked up");
+		return deliveryOrderRepository.findByDeliveryPersonnelIdAndStatus(deliveryPersonnelId, "PENDING");
 	}
 
 	public DeliveryOrder acceptDelivery(Long deliveryOrderId, Long deliveryPersonnelId) {
@@ -107,6 +107,7 @@ public class DeliveryPersonnelService {
 		}
 
 		// Assign the role to the customer
+		deliveryPersonnel.setAvailable(true);
 		deliveryPersonnel.setRoles(List.of(deliveryPersonnelRole)); // Assign the role entity
 
 		return deliveryPersonnelRepository.save(deliveryPersonnel);

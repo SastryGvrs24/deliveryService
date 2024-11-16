@@ -1,126 +1,61 @@
 package com.example.deliveryService.domain;
 
+import jakarta.persistence.*;
 import java.util.List;
 
-import jakarta.persistence.*;
-
 @Entity
-public class DeliveryPersonnel {
+public class DeliveryPersonnel extends AppUser {
 
-	public String getUsername() {
-		return username;
-	}
+    private String contactDetails;
+    private String vehicleType;
+    private boolean available;
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    @OneToMany(mappedBy = "deliveryPersonnel")
+    private List<DeliveryOrder> deliveryOrders;
 
-	public String getPassword() {
-		return password;
-	}
+    public DeliveryPersonnel() {
+        // Default constructor for JPA
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public DeliveryPersonnel(String username, String password, String fullName, String contactDetails, String vehicleType, boolean available) {
+        super(username, password, fullName); // Call the constructor of the superclass
+        this.contactDetails = contactDetails;
+        this.vehicleType = vehicleType;
+        this.available = available;
+    }
+    public DeliveryPersonnel(String username, String password) {
+        super(username, password);
+    }
+    // Getters and Setters
+    public String getContactDetails() {
+        return contactDetails;
+    }
 
-	public String getFullName() {
-		return fullName;
-	}
+    public void setContactDetails(String contactDetails) {
+        this.contactDetails = contactDetails;
+    }
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
+    public String getVehicleType() {
+        return vehicleType;
+    }
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
+    }
 
-	private String username;
-	private String password;
-	private String fullName;
-	private String contactDetails;
-	private String vehicleType;
-	private boolean available; // Status can be "AVAILABLE", "UNAVAILABLE"
+    public boolean isAvailable() {
+        return available;
+    }
 
-	@OneToMany(mappedBy = "deliveryPersonnel")
-	private List<DeliveryOrder> deliveryOrders;
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
 
-	@ManyToMany
-	@JoinTable(name = "delivery_personnel_roles", joinColumns = @JoinColumn(name = "delivery_personnel_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-	private List<Role> roles;
+    public List<DeliveryOrder> getDeliveryOrders() {
+        return deliveryOrders;
+    }
 
-	public boolean isAvailable() {
-		return available;
-	}
-
-	// Constructor, Getters, Setters
-	public DeliveryPersonnel() {
-	}
-
-	public DeliveryPersonnel(String name, String contactDetails, String vehicleType, boolean status) {
-		this.username = name;
-		this.contactDetails = contactDetails;
-		this.vehicleType = vehicleType;
-		this.available = status;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return username;
-	}
-
-	public void setName(String name) {
-		this.username = name;
-	}
-
-	public String getContactDetails() {
-		return contactDetails;
-	}
-
-	public void setContactDetails(String contactDetails) {
-		this.contactDetails = contactDetails;
-	}
-
-	public String getVehicleType() {
-		return vehicleType;
-	}
-
-	public void setVehicleType(String vehicleType) {
-		this.vehicleType = vehicleType;
-	}
-
-	public boolean getStatus() {
-		return available;
-	}
-
-	public void setStatus(boolean status) {
-		this.available = status;
-	}
-
-	public List<DeliveryOrder> getDeliveryOrders() {
-		return deliveryOrders;
-	}
-
-	public void setDeliveryOrders(List<DeliveryOrder> deliveryOrders) {
-		this.deliveryOrders = deliveryOrders;
-	}
-
-	public void setAvailable(boolean available) {
-		this.available = available;
-	}
-
-	public List<Role> getRoles() {
-		return roles;
-	}
-
-	public void setRoles(List<Role> roles) {
-		this.roles = roles;
-	}
+    public void setDeliveryOrders(List<DeliveryOrder> deliveryOrders) {
+        this.deliveryOrders = deliveryOrders;
+    }
 }

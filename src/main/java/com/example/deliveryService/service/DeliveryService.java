@@ -10,6 +10,7 @@ import com.example.deliveryService.repository.ItemOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -58,6 +59,10 @@ public class DeliveryService {
     // Method to check if the delivery personnel is available
     public boolean checkDeliveryPersonnelAvailability(Long deliveryPersonnelId) {
         Optional<DeliveryPersonnel> deliveryPersonnel = deliveryPersonnelRepository.findById(deliveryPersonnelId);
-        return deliveryPersonnel.isPresent() && "AVAILABLE".equals(deliveryPersonnel.get().getStatus());
+        return deliveryPersonnel.isPresent() && true==(deliveryPersonnel.get().isAvailable());
+    }
+    
+    public List<DeliveryPersonnel> getAvailableDeliveryPersonnel() {
+        return deliveryPersonnelRepository.findByAvailable(true);
     }
 }

@@ -23,7 +23,10 @@ public class DeliveryOrder {
         this.deliveryPersonnel = deliveryPersonnel;
         this.status = status;
     }
-
+    // Constructor
+    public DeliveryOrder() {
+      
+    }
     // Getters and Setters
     public Long getId() {
         return id;

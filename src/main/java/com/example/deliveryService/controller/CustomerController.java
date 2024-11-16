@@ -4,6 +4,7 @@ import com.example.deliveryService.domain.Customer;
 import com.example.deliveryService.domain.MenuItem;
 import com.example.deliveryService.domain.OrderStatus;
 import com.example.deliveryService.domain.RestaurantOwner;
+import com.example.deliveryService.domain.Role;
 import com.example.deliveryService.domain.item_Order;
 import com.example.deliveryService.service.CustomerService;
 import com.example.deliveryService.service.OrderService;
@@ -83,31 +84,56 @@ public class CustomerController {
 
 	// Customer Sign-up with Role assignment (e.g., ROLE_CUSTOMER)
 	@PostMapping("/signup")
-	public ResponseEntity<Response<Customer>> registerCustomer(@RequestBody Customer customer) {
-		Response<Customer> response = new Response<>();
-		try {
-			// Check if the username is already taken
-			boolean usernameExists = customerService.isUsernameAvailable(customer.getUsername());
-			if (usernameExists) {
-				response.setResponseCode(HttpStatus.BAD_REQUEST);
-				response.setErrorMessage("Username is already taken. Please choose another one.");
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-			}
+	public ResponseEntity<Response<Map<String, Object>>> registerCustomer(@RequestBody Customer customer) {
+	    Response<Map<String, Object>> response = new Response<>();
+	    try {
+	        // Check if the username is already taken
+	        boolean usernameExists = customerService.isUsernameAvailable(customer.getUsername());
+	        if (usernameExists) {
+	            response.setResponseCode(HttpStatus.BAD_REQUEST);
+	            response.setErrorMessage("Username is already taken. Please choose another one.");
+	            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	        }
 
-			// Assign the default role (ROLE_CUSTOMER)
-			customer.setPassword(passwordEncoder.encode(customer.getPassword()));
-			customerService.registerCustomer(customer);
+	        // Encrypt password before saving
+	        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
+	        
+	        // Save the customer
+	        Customer savedCustomer = customerService.registerCustomer(customer);
 
-			response.setResponseCode(HttpStatus.CREATED);
-			response.setData(customer);
-			return new ResponseEntity<>(response, HttpStatus.CREATED);
+	        // Prepare the manual response structure
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("id", savedCustomer.getId());
+	        data.put("username", savedCustomer.getUsername());
+	        data.put("fullName", savedCustomer.getFullName());
+	        
+	        // Extract role details from the saved customer (assuming the roles are already loaded)
+	        List<Map<String, Object>> roles = new ArrayList<>();
+	        for (Role role : savedCustomer.getRoles()) {
+	            Map<String, Object> roleMap = new HashMap<>();
+	            roleMap.put("id", role.getId());
+	            roleMap.put("roleName", role.getRoleName());
+	            roles.add(roleMap);
+	        }
 
-		} catch (Exception e) {
-			response.setResponseCode(HttpStatus.BAD_REQUEST);
-			response.setErrorMessage("Sign-up failed: " + e.getMessage());
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-		}
+	        data.put("roles", roles);
+
+	        // Prepare the success message
+	        String successMessage = "Customer registered successfully";
+
+	        // Populate the response with success message and data
+	        response.setResponseCode(HttpStatus.CREATED);
+	        response.setData(data); // Set the structured data as part of the response
+	        response.setMessage(successMessage);
+	        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+	    } catch (Exception e) {
+	        response.setResponseCode(HttpStatus.BAD_REQUEST);
+	        response.setErrorMessage("Sign-up failed: " + e.getMessage());
+	        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	    }
 	}
+
 
 	/**
 	 * Update customer details. A customer can update their profile details (name,
@@ -214,7 +240,7 @@ public class CustomerController {
 	            Map<String, Object> orderData = new HashMap<>();
 	            orderData.put("orderId", order.getId());
 	            orderData.put("status", order.getStatus());
-	            
+
 	            // Include only basic customer info to avoid recursion
 	            Map<String, Object> customerData = new HashMap<>();
 	            customerData.put("id", order.getCustomer().getId());
@@ -255,50 +281,59 @@ public class CustomerController {
 	}
 
 
+
 	@PreAuthorize("hasRole('ROLE_CUSTOMER')")
 	@GetMapping("/searchMenuItems")
-	public ResponseEntity<Response<List<Map<String, Object>>>> searchMenuItems(@RequestParam String searchTerm,
-			@RequestParam String searchType) {
-		Response<List<Map<String, Object>>> response = new Response<>();
-		try {
-			// Get the list of MenuItems based on the search criteria
-			List<MenuItem> menuItems = customerService.searchMenuItems(searchTerm, searchType);
+	public ResponseEntity<Response<List<Map<String, Object>>>> searchMenuItems(@RequestParam(required = false) String searchTerm,
+	        @RequestParam(required = false) String searchType) {
+	    Response<List<Map<String, Object>>> response = new Response<>();
+	    try {
+	        List<MenuItem> menuItems;
 
-			// Create a list to hold the response data
-			List<Map<String, Object>> menuItemResponses = new ArrayList<>();
+	        // If no search term or type is provided, return all menu items
+	        if (searchTerm == null || searchType == null) {
+	            menuItems = customerService.getAllMenuItems();
+	        } else {
+	            // Get the list of MenuItems based on the search criteria
+	            menuItems = customerService.searchMenuItems(searchTerm, searchType);
+	        }
 
-			// Transform MenuItem entities to a Map for the response
-			for (MenuItem menuItem : menuItems) {
-				Map<String, Object> menuItemData = new HashMap<>();
-				menuItemData.put("id", menuItem.getId());
-				menuItemData.put("name", menuItem.getName());
-				menuItemData.put("description", menuItem.getDescription());
-				menuItemData.put("price", menuItem.getPrice());
-				menuItemData.put("cuisineType", menuItem.getCuisineType());
+	        // Create a list to hold the response data
+	        List<Map<String, Object>> menuItemResponses = new ArrayList<>();
 
-				// Restaurant information
-				if (menuItem.getRestaurant() != null) {
-					Map<String, Object> restaurantData = new HashMap<>();
-					restaurantData.put("id", menuItem.getRestaurant().getId());
-					restaurantData.put("restaurantName", menuItem.getRestaurant().getRestaurantName());
-					restaurantData.put("address", menuItem.getRestaurant().getAddress());
-					restaurantData.put("hoursOfOperation", menuItem.getRestaurant().getHoursOfOperation());
-					menuItemData.put("restaurant", restaurantData);
-				}
+	        // Transform MenuItem entities to a Map for the response
+	        for (MenuItem menuItem : menuItems) {
+	            Map<String, Object> menuItemData = new HashMap<>();
+	            menuItemData.put("id", menuItem.getId());
+	            menuItemData.put("name", menuItem.getName());
+	            menuItemData.put("description", menuItem.getDescription());
+	            menuItemData.put("price", menuItem.getPrice());
+	            menuItemData.put("cuisineType", menuItem.getCuisineType());
 
-				menuItemResponses.add(menuItemData);
-			}
+	            // Restaurant information
+	            if (menuItem.getRestaurant() != null) {
+	                Map<String, Object> restaurantData = new HashMap<>();
+	                restaurantData.put("id", menuItem.getRestaurant().getId());
+	                restaurantData.put("restaurantName", menuItem.getRestaurant().getRestaurantName());
+	                restaurantData.put("address", menuItem.getRestaurant().getAddress());
+	                restaurantData.put("hoursOfOperation", menuItem.getRestaurant().getHoursOfOperation());
+	                menuItemData.put("restaurant", restaurantData);
+	            }
 
-			// Set the response data
-			response.setResponseCode(HttpStatus.OK);
-			response.setData(menuItemResponses);
-		} catch (IllegalArgumentException e) {
-			response.setResponseCode(HttpStatus.BAD_REQUEST);
-			response.setErrorMessage(e.getMessage());
-		}
+	            menuItemResponses.add(menuItemData);
+	        }
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+	        // Set the response data
+	        response.setResponseCode(HttpStatus.OK);
+	        response.setData(menuItemResponses);
+	    } catch (IllegalArgumentException e) {
+	        response.setResponseCode(HttpStatus.BAD_REQUEST);
+	        response.setErrorMessage(e.getMessage());
+	    }
+
+	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
 
 	// Track Order Status
 	@PreAuthorize("hasRole('ROLE_CUSTOMER')")

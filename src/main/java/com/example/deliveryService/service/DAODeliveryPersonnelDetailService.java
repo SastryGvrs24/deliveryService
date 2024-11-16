@@ -16,7 +16,7 @@ import com.example.deliveryService.repository.CustomerRepository;
 import com.example.deliveryService.repository.DeliveryPersonnelRepository;
 
 @Service
-@Qualifier("deiveryPersonnelDetailService")
+@Qualifier("deliveryPersonnelDetailService")
 public class DAODeliveryPersonnelDetailService implements UserDetailsService  {
 
     @Autowired
