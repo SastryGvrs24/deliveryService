@@ -30,6 +30,8 @@ public interface ItemOrderRepository extends JpaRepository<item_Order, Long> {
     @Query("SELECT COUNT(o) FROM item_Order o WHERE o.status = :status")
     long countByStatus(@Param("status") String status);
     
-    @Query("SELECT o FROM item_Order o LEFT JOIN FETCH o.menuItems WHERE o.customer.id = :customerId")
-    List<item_Order> findByCustomerIdWithMenuItems(@Param("customerId") Long customerId);
+    @Query("SELECT io FROM item_Order io " +
+            "JOIN FETCH io.menuItems " +  // Ensure MenuItems are fetched with the order
+            "WHERE io.customer.id = :customerId")
+     List<item_Order> findByCustomerIdWithMenuItems(@Param("customerId") Long customerId);
 }

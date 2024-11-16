@@ -1,5 +1,7 @@
 package com.example.deliveryService.domain;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -18,8 +20,7 @@ public class MenuItem {
     @JoinColumn(name = "restaurant_id")
     private RestaurantOwner restaurant;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id")
+    @ManyToOne()
     private item_Order order; // This is where the relationship is mapped
 
     private String cuisineType;

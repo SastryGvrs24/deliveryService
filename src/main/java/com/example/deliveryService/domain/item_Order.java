@@ -19,9 +19,12 @@ public class item_Order {
     @JoinColumn(name = "restaurant_owner_id")
     private RestaurantOwner restaurantOwner;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<MenuItem> menuItems;
-
+    @OneToMany
+    @JoinTable(
+            name = "order_item_menu",
+            joinColumns = @JoinColumn(name="item_order_id"),
+            inverseJoinColumns = @JoinColumn(name = "item_menu_id"))
+    private List<MenuItem> menuItems;  // Make sure this is mapped correctly
     private String status; // e.g., "Pending", "Preparing", etc.
 
     // Getters and setters
