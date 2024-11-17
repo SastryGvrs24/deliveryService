@@ -30,6 +30,9 @@ public class DeliveryServiceApplication implements CommandLineRunner {
     private MenuItemRepository menuItemRepository;
 
     @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     public static void main(String[] args) {
@@ -53,10 +56,14 @@ public class DeliveryServiceApplication implements CommandLineRunner {
         customerRepository.save(customer);
 
         initRestaurantOwners();
-
         initRestaurantMenuItems();
+        initAdmin();
+    }
 
-
+    void initAdmin() {
+        Admin admin = new Admin("Devendra", passwordEncoder.encode("password123"), "Devendra", "SuperAdmin");
+        admin.setRoles(List.of(rolesRepository.findByRoleName(RoleEnum.ROLE_ADMIN.toString())));
+        adminRepository.save(admin);
     }
 
     void initRestaurantOwners() {
@@ -70,6 +77,7 @@ public class DeliveryServiceApplication implements CommandLineRunner {
                 "Banjara Hills, Hyderabad",
                 "6AM - 12AM"
         );
+
         restaurantOwners.add(owner1);
 
         RestaurantOwner owner2 = new RestaurantOwner(
@@ -111,7 +119,7 @@ public class DeliveryServiceApplication implements CommandLineRunner {
                 "7AM - 11PM"
         );
         restaurantOwners.add(owner5);
-
+        restaurantOwners.forEach(owner -> owner.setRoles(List.of(rolesRepository.findByRoleName(RoleEnum.ROLE_RESTAURANT_OWNER.toString()))));
         restaurantOwnerRepository.saveAll(restaurantOwners);
     }
 
