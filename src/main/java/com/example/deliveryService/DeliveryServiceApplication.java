@@ -77,7 +77,6 @@ public class DeliveryServiceApplication implements CommandLineRunner {
                 "Banjara Hills, Hyderabad",
                 "6AM - 12AM"
         );
-
         restaurantOwners.add(owner1);
 
         RestaurantOwner owner2 = new RestaurantOwner(
