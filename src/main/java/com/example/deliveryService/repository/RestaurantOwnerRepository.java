@@ -7,5 +7,7 @@ public interface RestaurantOwnerRepository extends JpaRepository<RestaurantOwner
 
 	RestaurantOwner findByUsername(String username);
 
+	RestaurantOwner findByRestaurantName(String restaurantName);
+
 	boolean existsByUsername(String username);
 }

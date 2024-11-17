@@ -24,7 +24,8 @@ public class item_Order {
             name = "order_item_menu",
             joinColumns = @JoinColumn(name="item_order_id"),
             inverseJoinColumns = @JoinColumn(name = "item_menu_id"))
-    private List<MenuItem> menuItems;  // Make sure this is mapped correctly
+    private List<MenuItem> menuItems;
+
     private String status; // e.g., "Pending", "Preparing", etc.
 
     // Getters and setters

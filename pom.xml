@@ -108,6 +108,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		<finalName>spring-boot-delivery-service-exec</finalName>
 	</build>
 	<repositories>
 		<repository>

@@ -3,7 +3,7 @@ package com.example.deliveryService.domain;
 import jakarta.persistence.Entity;
 
 @Entity
-public class Admin extends AppUser {
+public class  Admin extends AppUser {
 
     private String adminLevel;
 
@@ -29,3 +29,7 @@ public class Admin extends AppUser {
         this.adminLevel = adminLevel;
     }
 }
+
+
+
+

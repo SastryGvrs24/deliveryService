@@ -1,8 +1,8 @@
 package com.example.deliveryService.domain;
 
-import java.util.List;
-
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 public class MenuItem {
@@ -16,12 +16,24 @@ public class MenuItem {
     private Double price;
     private boolean available; // Status can be "AVAILABLE", "UNAVAILABLE"
 
+    public MenuItem() {
+    }
+
+    public MenuItem(String name, String description, Double price, boolean available, RestaurantOwner restaurant, String cuisineType) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.available = available;
+        this.restaurant = restaurant;
+        this.cuisineType = cuisineType;
+    }
+
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
     private RestaurantOwner restaurant;
 
-    @ManyToOne()
-    private item_Order order; // This is where the relationship is mapped
+    @ManyToMany(mappedBy = "menuItems")
+    private List<item_Order> order; // This is where the relationship is mapped
 
     private String cuisineType;
 
@@ -74,11 +86,11 @@ public class MenuItem {
         this.cuisineType = cuisineType;
     }
 
-    public item_Order getOrder() {
+    public List<item_Order> getOrder() {
         return order;
     }
 
-    public void setOrder(item_Order order) {
+    public void setOrder(List<item_Order> order) {
         this.order = order;
     }
 
