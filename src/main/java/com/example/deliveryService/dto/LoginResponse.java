@@ -1,11 +1,25 @@
 package com.example.deliveryService.dto;
 
-public class LoginResponse {
-    String token;
-    final String type = "bearer";
+import java.util.List;
 
-    public LoginResponse(String token) {
+public class LoginResponse {
+    private String username;
+    private String token;
+    private List<String> roles; // Add this field to store roles
+
+    public LoginResponse(String username, String token, List<String> roles) {
+        this.username = username;
         this.token = token;
+        this.roles = roles;
+    }
+
+    // Getters and Setters
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getToken() {
@@ -16,7 +30,11 @@ public class LoginResponse {
         this.token = token;
     }
 
-    public String getType() {
-        return type;
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 }
